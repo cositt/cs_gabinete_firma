@@ -192,3 +192,25 @@ class TestSessionSignatureCron(TestGabineteFirmaCommon):
         self.env['documents.document']._cron_cs_request_session_signatures()
 
         self.assertFalse(document.cs_sign_request_id)
+
+
+class TestPartnerTutorField(TransactionCase):
+    """base.view_partner_form repite 'user_id' (el visible en Ventas y compras, y otro
+    oculto dentro del subformulario de 'Añadir un contacto'). Un xpath anclado ahí cae en
+    el primero que encuentre en orden de documento, que puede ser el oculto: el campo
+    termina insertado donde ningún usuario lo ve nunca, aunque la instalación sea perfecta
+    y los tests a nivel de ORM sigan en verde. Ver [[views/res_partner_views.xml]]."""
+
+    def test_cs_tutor_id_is_not_nested_inside_a_subview(self):
+        from lxml import etree
+
+        view = self.env['res.partner'].get_view(
+            view_id=self.env.ref('base.view_partner_form').id, view_type='form')
+        arch = etree.fromstring(view['arch'])
+
+        [tutor_field] = arch.xpath("//field[@name='cs_tutor_id']")
+        for ancestor in tutor_field.iterancestors():
+            self.assertNotEqual(
+                ancestor.tag, 'field',
+                "cs_tutor_id quedó anidado dentro de otro <field> (subformulario "
+                "one2many) en vez de en el formulario principal del contacto.")

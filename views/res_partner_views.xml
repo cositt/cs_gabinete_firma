@@ -6,7 +6,11 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <field name="user_id" position="after">
+            <!-- user_id aparece dos veces en base.view_partner_form: la principal (pestaña
+                 "Ventas y compras") y otra oculta dentro del subformulario de "Añadir un
+                 contacto". Anclar ahí insertaba el campo donde nunca se ve. category_id
+                 (Etiquetas) es única en la vista y está en la cabecera del formulario. -->
+            <field name="category_id" position="after">
                 <field name="cs_tutor_id"
                        domain="[('id', '!=', id)]"
                        options="{'no_create_edit': True}"/>
