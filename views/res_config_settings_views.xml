@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_gabinete" model="ir.ui.view">
+        <field name="name">res.config.settings.form.gabinete</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="documents.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='deletion_delay']" position="after">
+                <setting string="Firma de sesiones de gabinete"
+                         help="Espacio de trabajo donde se guardan las sesiones y plantilla que firmará el tutor.">
+                    <div class="content-group">
+                        <div class="row mt16">
+                            <label for="cs_gabinete_folder_id" class="col-lg-4 o_light_label"/>
+                            <field name="cs_gabinete_folder_id"/>
+                        </div>
+                        <div class="row">
+                            <label for="cs_gabinete_sign_template_id" class="col-lg-4 o_light_label"/>
+                            <field name="cs_gabinete_sign_template_id"/>
+                        </div>
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

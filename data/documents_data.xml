@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="documents_folder_gabinetes" model="documents.folder">
+            <field name="name">Gabinetes</field>
+            <field name="sequence">15</field>
+            <field name="description"><![CDATA[<p>Documentos de las sesiones de gabinete (psicología, fisioterapia, logopedia...). El tutor firma su conformidad al día siguiente.</p>]]></field>
+        </record>
+
+        <record id="documents_facet_gabinetes" model="documents.facet">
+            <field name="name">Gabinete</field>
+            <field name="folder_id" ref="documents_folder_gabinetes"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="documents_tag_sesion" model="documents.tag">
+            <field name="name">Sesión</field>
+            <field name="facet_id" ref="documents_facet_gabinetes"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="documents_tag_firmada" model="documents.tag">
+            <field name="name">Firmada</field>
+            <field name="facet_id" ref="documents_facet_gabinetes"/>
+            <field name="sequence">20</field>
+        </record>
+
+    </data>
+</odoo>
