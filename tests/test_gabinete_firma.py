@@ -22,12 +22,17 @@ class TestGabineteFirmaCommon(TransactionCase):
             'name': 'Acta de conformidad de sesion.pdf',
             'raw': cls.pdf_content,
         })
+        # v19: el PDF de una plantilla vive en sign.document (document_ids), no en
+        # sign.template.attachment_id, y los sign.item cuelgan del sign.document.
         cls.master_template = cls.env['sign.template'].create({
             'name': 'Acta de conformidad de sesion',
+        })
+        master_document = cls.env['sign.document'].create({
             'attachment_id': master_attachment.id,
+            'template_id': cls.master_template.id,
         })
         cls.env['sign.item'].create({
-            'template_id': cls.master_template.id,
+            'document_id': master_document.id,
             'type_id': cls.env.ref('sign.sign_item_type_signature').id,
             'responsible_id': cls.env.ref('sign.sign_item_role_default').id,
             'required': True,
@@ -44,7 +49,7 @@ class TestGabineteFirmaCommon(TransactionCase):
 
         cls.tutora = cls.env['res.partner'].create({
             'name': 'Ana Ruiz Moreno',
-            'mobile': '+34 600 11 22 33',
+            'phone': '+34 600 11 22 33',
             'email': 'ana.ruiz@example.com',
         })
         cls.atendido = cls.env['res.partner'].create({
@@ -83,7 +88,7 @@ class TestSessionSignRequest(TestGabineteFirmaCommon):
         self.assertEqual(request.state, 'sent')
         self.assertEqual(request.request_item_ids.partner_id, self.tutora)
         self.assertEqual(document.cs_sign_request_id, request)
-        self.assertEqual(request.cs_signer_mobile, self.tutora.mobile)
+        self.assertEqual(request.cs_signer_mobile, self.tutora.phone)
 
     def test_does_not_consume_source_attachment(self):
         document = self._create_document(partner=self.atendido)
@@ -105,7 +110,7 @@ class TestSessionSignRequest(TestGabineteFirmaCommon):
     def test_signer_falls_back_to_contact_without_tutor(self):
         sin_tutor = self.env['res.partner'].create({
             'name': 'Persona sin tutor',
-            'mobile': '+34 600 99 88 77',
+            'phone': '+34 600 99 88 77',
         })
         document = self._create_document(partner=sin_tutor)
         request = document._cs_create_session_sign_request()
@@ -214,3 +219,32 @@ class TestPartnerTutorField(TransactionCase):
                 ancestor.tag, 'field',
                 "cs_tutor_id quedó anidado dentro de otro <field> (subformulario "
                 "one2many) en vez de en el formulario principal del contacto.")
+
+
+class TestV19DataModel(TestGabineteFirmaCommon):
+    """Odoo 18+ eliminó documents.folder y documents.facet: las carpetas son
+    documents.document con type='folder' y las etiquetas ya no tienen faceta."""
+
+    def test_gabinetes_folder_is_a_folder_document(self):
+        self.assertEqual(self.folder._name, 'documents.document')
+        self.assertEqual(self.folder.type, 'folder')
+
+    def test_company_folder_field_targets_documents(self):
+        field = self.env['res.company']._fields['cs_gabinete_folder_id']
+        self.assertEqual(field.comodel_name, 'documents.document')
+
+    def test_session_tags_exist(self):
+        self.assertTrue(self.env.ref('cs_gabinete_firma.documents_tag_sesion'))
+        self.assertTrue(self.env.ref('cs_gabinete_firma.documents_tag_firmada'))
+
+    def test_request_copies_master_sign_items(self):
+        document = self._create_document(partner=self.atendido)
+        request = document._cs_create_session_sign_request()
+        self.assertTrue(request.template_id.sign_item_ids)
+        self.assertNotEqual(request.template_id, self.master_template)
+
+    def test_action_opens_list_view_mode(self):
+        documents = self._create_document('S1', partner=self.atendido) | \
+            self._create_document('S2', partner=self.atendido)
+        action = documents.action_cs_request_session_signature()
+        self.assertNotIn('tree', action['view_mode'])

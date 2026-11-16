@@ -31,7 +31,7 @@ class DocumentsDocument(models.Model):
             'type': 'ir.actions.act_window',
             'name': _("Firmas de sesión"),
             'res_model': 'sign.request',
-            'view_mode': 'kanban,tree,form',
+            'view_mode': 'kanban,list,form',
             'domain': [('id', 'in', requests.ids)],
         }
 
@@ -60,16 +60,24 @@ class DocumentsDocument(models.Model):
             raise UserError(_(
                 "Configure la plantilla de firma de sesión en los ajustes de Documentos."))
 
-        # documents_sign deja que sign.template se apropie del adjunto de un documento,
-        # así que se le entrega una copia para no vaciar el documento de origen.
-        attachment = self.attachment_id.copy({'res_model': False, 'res_id': False})
+        master_document = master.document_ids[:1]
+        if not master_document:
+            raise UserError(_(
+                "La plantilla de firma de sesión «%s» no tiene ningún documento.", master.name))
+
+        # v19: el PDF de una plantilla vive en sign.document. documents_sign copia por
+        # su cuenta el adjunto si ya pertenece a otro registro, así que el documento de
+        # origen conserva su fichero.
         template = self.env['sign.template'].create({
             'name': self.name,
-            'attachment_id': attachment.id,
             'folder_id': master.folder_id.id,
             'documents_tag_ids': [Command.set(master.documents_tag_ids.ids)],
         })
-        master._copy_sign_items_to(template)
+        sign_document = self.env['sign.document'].create({
+            'attachment_id': self.attachment_id.id,
+            'template_id': template.id,
+        })
+        master_document._copy_sign_items_to(sign_document)
 
         roles = template.sign_item_ids.responsible_id
         if not roles:
