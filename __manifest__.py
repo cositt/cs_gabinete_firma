@@ -18,7 +18,7 @@ atendida y le envía por WhatsApp el enlace tokenizado para firmarla.
     'website': "https://cositt.com",
 
     'category': 'Autismosur/Gabinetes',
-    'version': '17.0.1.0.0',
+    'version': '19.0.1.0.0',
 
     'depends': ['documents_sign', 'whatsapp'],
 

@@ -18,12 +18,12 @@ class SignRequest(models.Model):
         string='Móvil del firmante', compute='_compute_cs_signer_mobile')
 
     @api.depends('request_item_ids.state',
-                 'request_item_ids.partner_id.mobile',
                  'request_item_ids.partner_id.phone')
     def _compute_cs_signer_mobile(self):
         for request in self:
             partner = request._cs_get_signer_item().partner_id
-            request.cs_signer_mobile = partner.mobile or partner.phone or False
+            # v19 eliminó res.partner.mobile: el upgrade lo fusiona en phone.
+            request.cs_signer_mobile = partner.phone or False
 
     def _cs_get_signer_item(self):
         """Firmante al que hay que reclamar la firma: el primero pendiente y,

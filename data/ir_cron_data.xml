@@ -9,7 +9,6 @@
             <field name="code">model._cron_cs_request_session_signatures()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active" eval="False"/>
             <field name="nextcall" eval="(DateTime.today() + relativedelta(days=1)).strftime('%Y-%m-%d 07:00:00')"/>
         </record>
